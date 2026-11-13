@@ -17,7 +17,7 @@
             <th>Name</th>
             <th>Price</th>
             <th>Description</th>
-            <th>Category Id</th>
+            <th>Category</th>
             <th></th>
         </tr>
     </thead>
@@ -29,7 +29,7 @@
                 <td>@item.Name</td>
                 <td>@item.Price</td>
                 <td>@item.Description</td>
-                <td>@item.CategoryId</td>
+                <td>@item.Category?.Name</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                     <a asp-action="Details" asp-route-id="@item.Id">Details</a> |

@@ -1,6 +1,7 @@
 ﻿using day3_TrinhVanChinh.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using day3_TrinhVanChinh.Data;
 using day3_TrinhVanChinh.Models;
 
 namespace day3_TrinhVanChinh.Controllers
@@ -8,23 +9,21 @@ namespace day3_TrinhVanChinh.Controllers
     public class CategoryController : Controller
     {
         // GET: CategoryController
-
-        private static List<Models.Category> categories = new List<Models.Category>
-        {
-            new Models.Category { Id = 1, Name = "Category 1" },
-            new Models.Category { Id = 2, Name = "Category 2" },
-            new Models.Category { Id = 3, Name = "Category 3" }
-        };
+        private ILogger<CategoryController> _logger;
+        public CategoryController(ILogger<CategoryController> logger) { 
+            _logger = logger;
+        }
 
         public ActionResult Index()
         {
-            return View(categories);
+            return View(CategoryData.Categories);
         }
 
         // GET: CategoryController/Details/5
         public ActionResult Details(int id)
         {
-            var category = categories.FirstOrDefault(c => c.Id == id); 
+            _logger.LogInformation($"Fetching details for category with ID: {id}");
+            var category = CategoryData.Categories.FirstOrDefault(c => c.Id == id); 
             if(category == null)
             {
                 return NotFound();
@@ -48,16 +47,16 @@ namespace day3_TrinhVanChinh.Controllers
                 return View(category);
             }
 
-            int newId = categories.Any() ? categories.Max(c => c.Id) + 1 : 1;
+            int newId = CategoryData.Categories.Any() ? CategoryData.Categories.Max(c => c.Id) + 1 : 1;
             category.Id = newId;
-            categories.Add(category);
+            CategoryData.Categories.Add(category);
             return RedirectToAction(nameof(Index));
         }
 
         // GET: CategoryController/Edit/5
         public ActionResult Edit(int id)
         {
-            var category = categories.FirstOrDefault(c => c.Id == id);
+            var category = CategoryData.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
                 return NotFound();
@@ -70,24 +69,24 @@ namespace day3_TrinhVanChinh.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Category category)
         {
-            var existingCategory = categories.FirstOrDefault(c => c.Id == category.Id);
+            var existingCategory = CategoryData.Categories.FirstOrDefault(c => c.Id == category.Id);
             if (existingCategory == null)
             {
                 return NotFound();
             }
             if (!ModelState.IsValid)
             {
-                existingCategory.Name = category.Name;
-                return RedirectToAction(nameof(Index));
-
+                return View(category);
             }
-            return View(category);
+
+            existingCategory.Name = category.Name;
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: CategoryController/Delete/5
         public ActionResult Delete(int id)
         {
-           var category = categories.FirstOrDefault(c => c.Id == id);
+           var category = CategoryData.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
                 return NotFound();
@@ -100,12 +99,19 @@ namespace day3_TrinhVanChinh.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            var category = categories.FirstOrDefault(c => c.Id == id);
+            var category = CategoryData.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
                 return NotFound();
             }
-            categories.Remove(category);
+
+            if (category.Products.Count > 0)
+            {
+                ModelState.AddModelError(string.Empty, "Cannot delete a category that has products assigned to it.");
+                return View(nameof(Delete), category);
+            }
+
+            CategoryData.Categories.Remove(category);
             return RedirectToAction(nameof(Index));
         }
     }
